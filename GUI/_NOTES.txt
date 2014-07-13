@@ -1,0 +1,20 @@
+
+Notes file for project DIWire-JS
+Clay Budin
+clay_budin@hotmail.com
+Jul 08 2014
+Rev: Jul 08 2014
+
+
+To Do
+Implement functionality of main window - display geo, pull points, 3D display
+Implement UI elements surrounding main window
+Test SVG and DXF import libraries for JS
+
+
+
+
+
+
+
+
