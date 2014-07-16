@@ -1,0 +1,117 @@
+
+/* 
+ Stepper Motor Control - one step at a time
+ 
+ This program drives a unipolar or bipolar stepper motor. 
+ The motor is attached to digital pins 8 - 11 of the Arduino.
+ 
+ The motor will step one step at a time, very slowly.  You can use this to
+ test that you've got the four wires of your stepper wired to the correct
+ pins. If wired correctly, all steps should be in the same direction.
+ 
+ Use this also to count the number of steps per revolution of your motor,
+ if you don't know it.  Then plug that number into the oneRevolution
+ example to see if you got it right.
+ 
+ Created 30 Nov. 2009
+ by Tom Igoe
+ 
+ */
+int time;
+int x=0;
+int steps = 8;
+int dir = 49;
+int s=0;
+int delay_step1;
+int number_steps = 67;
+int period_stepper;
+int addedperiod = 500;
+
+
+void setup() {
+  // initialize the serial port:
+  Serial.begin(4800);
+  pinMode(steps, OUTPUT);
+  pinMode(dir, OUTPUT);
+  digitalWrite(dir, HIGH);
+  analogWrite(steps,1);
+ cli();//stop interrupts
+
+
+
+//set timer1 interrupt at 1Hz
+  TCCR1A = 0;// set entire TCCR1A register to 0
+  TCCR1B = 0;// same for TCCR1B
+  TCNT1  = 0;//initialize counter value to 0
+  // set compare match register for 1hz increments
+  OCR1A = 1000; //should be 200hz at 68? or maybe 1024
+  //OCR1A = 15624;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+  // turn on CTC mode
+  TCCR1B |= (1 << WGM12);
+  // Set CS10 and CS12 bits for 1024 prescaler
+  TCCR1B |= (1 << CS11)| (1 << CS10);
+  // enable timer compare interrupt
+  TIMSK1 |= (1 << OCIE1A);
+
+
+
+
+  sei();//allow interrupts
+  
+  delay(100); //without this delay, first timer reading will be zero, and thus freeze program
+}//end setup
+
+
+
+ISR(TIMER1_COMPA_vect)
+{  
+  time++; 
+}
+
+void StepperFunction1()
+{
+   if(x< number_steps)
+ {
+    x++;
+      
+    digitalWrite(steps,HIGH);
+  
+    digitalWrite(steps,LOW);
+    delay(10);
+    period_stepper = time + addedperiod;
+    
+
+ }
+    
+
+  else if(x>=number_steps)
+ {
+   delay_step1 = time;
+   
+   if((delay_step1 >= period_stepper)&(s==0))
+   {
+     digitalWrite(dir, LOW);
+     x=0;
+     s=1;
+   }
+   
+   else if((delay_step1 >= period_stepper)&(s==1))
+   {
+     digitalWrite(dir, HIGH);
+     x=0;
+     s=0;
+   } 
+    
+ }  
+
+
+}
+void loop() {
+
+StepperFunction1();
+
+    
+}
+
+ 
+  
