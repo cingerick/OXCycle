@@ -126,10 +126,13 @@
 
 	
 	$("#newTab").click(function(){
-	var li="<li><a id='tabtop"+tabCount+"' href='#Tab-"+tabCount+"'>Test "+tabCount+"</a></li>";
-	tabFresh.find( ".ui-tabs-nav" ).append( li );
+	var li="<li><a id='tabtop"+tabCount+"' href='#Tab-"+tabCount+"' role='presentation'>Test "+tabCount+"</a></li>";
+	$(li).insertBefore($("#newTab").parent());
+	//tabFresh.find( ".ui-tabs-nav" ).append( li );
 	tabFresh.append($(tabHTML.clone()));
 	$(".newTabHTML").attr("id","#Tab-"+tabCount);
+	$(".newTabHTML").attr("role","tabpanel");
+	$(".newTabHTML").addClass("ui-tabs-panel ui-widget-content ui-corner-bottom");
 	$(".newTabHTML").removeClass("newTabHTML");
 	
 	// $( "#tabs" ).tabs();
