@@ -118,3 +118,8 @@ height:100%
   border-color: #ddd transparent #ddd #ddd;
   *border-right-color: #ffffff;
 }
+
+.tabContent{
+ min-height:800px;
+ width:100%;
+}
