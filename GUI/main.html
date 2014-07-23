@@ -1,92 +1,47 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
 <head>
-<link href="css/jquery-ui.css" rel="stylesheet">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	
+	<title>OXO Cycle Tester</title>
+	
+	<link rel="stylesheet" href="css/styles.css" >
+	<link rel="stylesheet" href="css/ui-lightness/jquery-ui.css" type="text/css" media="screen, projection"/>
 	<script src="js/jquery-1.11.1.min.js"></script>
 	<script src="js/jquery-ui.js"></script>
+	<script type="text/javascript" language="javascript" src="js/jquery.dropdownPlain.js"></script>
 	<script src="js/main.js"></script>
-    <link href="css/styles.css" rel="stylesheet">
+    
 	
 	
 	  <style>
-.draggable {
-    border: 1px solid #eee;
-    width: 200px;
-    min-height: 20px;
-    list-style-type: none;
-    margin: 0;
-    padding: 5px 0 0 0;
-    float: left;
-    margin-right: 10px;
-  }
-  .draggable li {
-    margin: 0 5px 5px 5px;
-    padding: 5px;
-    font-size: 1.2em;
-    width: 180px;
-  }
-  
-  .sortable{
-    border: 1px solid #eee;
-    width: 600px;
-    min-height: 20px;
-    list-style-type: none;
-    margin: 0;
-    padding: 5px 0 0 0;
-    float: left;
-    margin-right: 10px;
-  }
-  
-    .sortable li {
-    margin: 0 5px 5px 5px;
-    padding: 5px;
-    font-size: 1.2em;
-    width: 100%;
-  }
-  
-  
-  
-    .portlet {
 
-    
-  }
-  .portlet-header {
-    padding: 5px ;
-    position: relative;
-  }
-  .portlet-toggle {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    margin-top: -8px;
-  }
-  .portlet-content {
-    padding: 0.4em;
-  }
-  .portlet-placeholder {
-    border: 1px dotted black;
-    margin: 0 1em 1em 0;
-    height: 50px;
-  }
-  
-  
   
   </style>
   
   
 	<script>
   $(function() {
+    
   	$("#defaultTab").addClass("newTabHTML");
 	$("#defaultTab").attr("id","");
 	var tabHTML=$(".newTabHTML").clone();
 	$(".newTabHTML").attr("id","defaultTab");
 	$("#defaultTab").removeClass("newTabHTML");
 	
-	
     var tabFresh = $( "#tabs" ).tabs();
-	$(".slider").slider();
+	$(".slider").slider({
+	  range: "min",
+      value: 2,
+      min: .1,
+      max: 3,
+      slide: function( event, ui ) {
+        $( "#amount" ).val( "$" + ui.value );
+      }
+	  });
 	
-	$( "input[type=submit], a, button" )
+	$( "input[type=submit], button, .button" )
       .button()
       .click(function( event ) {
         event.preventDefault();
@@ -100,7 +55,7 @@
 	  refreshPortlets();
 	  }
     });
-    $( ".draggable li" ).draggable({
+    $( ".leftList li" ).draggable({
       connectToSortable: ".sortable",
 	  handle: ".portlet-header",
       helper: "clone",
@@ -108,11 +63,11 @@
     });
     $( "ul, li" ).disableSelection();
 	
-	  $( ".portlet" )
+	  $( ".leftList .portlet" )
       .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
       .find( ".portlet-header" )
         .addClass( "ui-widget-header ui-corner-all" )
-        .prepend( "<span class='ui-icon ui-icon-plusthick portlet-toggle'></span>");
+        .prepend( "<span class='sortIcon ui-icon ui-icon-arrowthick-2-n-s'> <span class='ui-icon ui-icon-plusthick portlet-toggle'></span>");
 		
 		
 	$( document ).on("click",".portlet-toggle",function(){
@@ -150,8 +105,16 @@
 
   function refreshPortlets(){
 
+	
+	$( ".spinner" ).spinner({
+	  min: 1,
+      step: 1,
+      start: 1
+	});
+	
+	
 	$(".slider").slider();
-   	$( "input[type=submit], a, button" ).button();
+   	$( "input[type=submit], button, .button" ).button();
 	
 	$( ".sortable" ).sortable({
 	  items: "li:not(.head)",
@@ -161,7 +124,7 @@
 	  refreshPortlets();
 	  }
     });
-    $( ".draggable li" ).draggable({
+    $( ".leftList li" ).draggable({
       connectToSortable: ".sortable",
 	  handle: ".portlet-header",
       helper: "clone",
@@ -169,11 +132,10 @@
     });
     $( "ul, li" ).disableSelection();
 	
-	  $( ".portlet" )
+	  $( ".sortable .portlet" )
       .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
       .find( ".portlet-header" )
-        .addClass( "ui-widget-header ui-corner-all" )
-        .prepend( "<span class='ui-icon ui-icon-plusthick portlet-toggle'></span>");
+      .addClass( "ui-state-highlight ui-corner-all" );
 
 	
   }
@@ -186,14 +148,32 @@
   
   
   </script>
-  
-  <title>OXO Cycle tester Chrome v0.25b</title><!-- This won't show in current Chrome Apps -->
+ 
 </head>
 <body>
-	<div id="pageWrapper">
-		<div id="headerWrapper">
-		</div>
-		<div id="contentWrapper" class="col-md-12">
+
+		<div id="header-wrap">
+		
+			<div id="logo">
+			<p>&nbsp </p> 
+			<a href="index.php">
+			
+				<img src="images/oxo_logo_top.jpg" alt="OXO Intranet" border="0" />
+				<img src="images/labs.png" alt="OXO Intranet" border="0" />
+			</a>
+			<p>&nbsp </p>
+			
+			</div>
+		
+			<div id="navbar">
+			
+			<div id="inner-navbar">
+			</div>
+			</div>
+	</div>
+		
+		
+	<div id="content-wrap">
 		
 			<div id="tabs">
 			  <ul>
@@ -202,15 +182,37 @@
 			  </ul>
 			  <div id="defaultTab">
 				<div class="tabContent">
-				  <ul class="draggable">
+				  <ul class="leftList">
 					 <li  class="">  
 						<div class="portlet">
 							<div class="portlet-header">Actuator</div>
-							<div class="portlet-content" style="display:none">
-							<div class="slider"></div>
-							OR
-							<button>use current position</button>
-							frequency:every nth cycle
+							<div class="portlet-content" style="display:none">	
+							<ul>
+								<li><label>Actuator #</label>
+									<select>
+									  <option value="1">1</option>
+									  <option value="2">2</option>
+									  <option value="3">3</option>
+									</select>								
+								</li>
+								<li>
+									<div>Throw</div>
+									<div class="slider actuatorSlider"></div>
+									<div class="testBtn button">test</div>
+								</li>
+								<li>
+									<div class="button actuatorBtn">use current</div></li>
+								<li>
+									<div>Motor Speed</div>
+									<div class="slider actuatorSlider"></div>
+								
+								</li>
+								<li>
+									<div>frequency:every </div> 
+									<div><input class="spinner"></div>
+									<div>nth cycle</div></li>
+							</ul>
+							
 							
 							</div>
 						</div>
@@ -219,6 +221,28 @@
 						<div class="portlet">
 							<div class="portlet-header">Stepper</div>
 							<div class="portlet-content" style="display:none">
+							<ul>
+								<li><label>Stepper #</label>
+									<select>
+									  <option value="1">1</option>
+									  <option value="2">2</option>
+									  <option value="3">3</option>
+									</select>								
+								</li>
+								<li>
+									<div>degrees?</div>
+									<div><input class="spinner"></div>
+									<div class="testBtn button">test</div>
+								</li>
+								<li>
+									<div>Motor Speed</div>
+									<div class="slider actuatorSlider"></div>
+								
+								</li>
+								<li><div>frequency:every </div> 
+									<div><input class="spinner"></div>
+									<div>nth cycle</div></li>
+							</ul>
 							
 							</div>
 						</div>
@@ -226,19 +250,40 @@
 					  <li  class="">  
 						<div class="portlet">
 							<div class="portlet-header">Sensor</div>
-							<div class="portlet-content" style="display:none">Lorem ipsum dolor sit amet, consectetuer adipiscing elit</div>
+							<div class="portlet-content" style="display:none">
+								<ul>
+									<li>Pick Sensor</li>
+									<li>reading type</li>
+									<li>other stuff</li>
+									<li>
+										<div>frequency:every </div> 
+										<div><input class="spinner"></div>
+										<div>nth cycle</div>
+									</li>
+								</ul>
+							</div>
 						</div>
 					  </li>
 					  <li  class="">  
 						<div class="portlet">
 							<div class="portlet-header">Camera</div>
-							<div class="portlet-content" style="display:none">Lorem ipsum dolor sit amet, consectetuer adipiscing elit</div>
+							<div class="portlet-content" style="display:none">
+								<ul>
+									<li><div>frequency:every </div> <div><input class="spinner"></div><div>nth cycle</div></li>
+								</ul>
+							</div>
 						</div>
 					  </li>
 					  <li  class="">  
 						<div class="portlet">
 							<div class="portlet-header">Pause</div> 
-							<div class="portlet-content" style="display:none">Lorem ipsum dolor sit amet, consectetuer adipiscing elit</div>
+							<div class="portlet-content" style="display:none">
+								<ul>
+									<li>Pick Sensor</li>
+									<li><input class="spinner">milliseconds</li>
+									<li><div>frequency:every </div> <div><input class="spinner"></div><div>nth cycle</div></li>
+								</ul>
+							</div>
 						</div>
 					  </li>
 				  </ul>
@@ -256,10 +301,16 @@
 		
 
 		</div>
-		<div id="footerWrapper" class="col-md-12">
-		</div>
-	</div>
+<br class="clear"/>
+</div>
 
+		<div  id="footer" >
+			<center>
+			<p>  <a href="http://www.oxo.com/">www.oxo.com</a> </p><p> (c) 2011 OXO </p>
+			</center>
+		</div>
+					
+	
 </body>
 
 </html>
