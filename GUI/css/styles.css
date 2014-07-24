@@ -30,6 +30,11 @@ h4									{font: Helvetica, Sans-Serif; }
 .spinner							{width:50px;}
 
 .ui-button-text						{padding:5px !important;}
+.trash{
+float:left;
+width:100%;
+height:50px;
+}
 
 .leftList {
     border: 1px solid #eee;

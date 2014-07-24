@@ -10,18 +10,10 @@
 	<link rel="stylesheet" href="css/ui-lightness/jquery-ui.css" type="text/css" media="screen, projection"/>
 	<script src="js/jquery-1.11.1.min.js"></script>
 	<script src="js/jquery-ui.js"></script>
-	<script src="jquery.ui.touch-punch.min.js"></script>
-
-	<script type="text/javascript" language="javascript" src="js/jquery.dropdownPlain.js"></script>
+	<script src="js/jquery.ui.touch-punch.min.js"></script>
+	<script src="js/jquery.dropdownPlain.js"></script>
 	<script src="js/main.js"></script>
     
-	
-	
-	  <style>
-
-  
-  </style>
-  
   
 	<script>
   $(function() {
@@ -65,11 +57,13 @@
 	  }
     });
     $( ".leftList li" ).draggable({
-      connectToSortable: ".sortable",
+      connectToSortable: ".sortable ",
 	  handle: ".portlet-header",
       helper: "clone",
       revert: "invalid"
     });
+	
+	
     $( "ul, li" ).disableSelection();
 	
 
@@ -102,7 +96,13 @@
 	refreshPortlets();
 	
 	});
-	
+	$(".trash").droppable({
+    accept: ".sortable li",
+    hoverClass: "ui-state-hover",
+    drop: function(ev, ui) {
+        ui.draggable.remove();
+    }
+	});
 	
 	
   });
@@ -122,6 +122,7 @@
    	$( "input[type=submit], button, .button" ).button();
 	
 	$( ".sortable" ).sortable({
+	  connectWith:".trash",
 	  items: "li:not(.head)",
       revert: true,
 	  handle: ".portlet-header",
@@ -141,15 +142,15 @@
       .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
       .find( ".portlet-header" )
       .addClass( "ui-state-highlight ui-corner-all" );
-
-	
+	  
+	  	$(".trash").droppable({
+    accept: ".sortable li",
+    hoverClass: "ui-state-hover",
+    drop: function(ev, ui) {
+        ui.draggable.remove();
+    }
+	});
   }
-  
-  
-  
-  
-  
-  
   
   
   </script>
@@ -292,9 +293,15 @@
 						</div>
 					  </li>
 				  </ul>
+				
 					<ul class="sortable connectedSortable">
 					  <li class="ui-state-default head">Drag actions here</li>
 					</ul>
+					
+				 <div class=" trash ui-state-error head">Trash</div>
+				
+						
+				
 				</div>
 			  </div>
 			  <div id="newTabs"></div>
