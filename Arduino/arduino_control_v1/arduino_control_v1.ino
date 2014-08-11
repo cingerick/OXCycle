@@ -1,4 +1,7 @@
+#include <JsonParser.h>
 #include "declarations.h"
+
+
 
 void setup(){
   Serial.begin(9600);
@@ -12,64 +15,81 @@ void setup(){
 }
 void loop(){
 
-  checkActuators();
-  checkSteppers();
+  //checkActuators();
+  //checkSteppers();
 }
 
+void moveActuator(int i){
 
-void setTargets(){
+        int id=steps[i][devId];
+        int spd=steps[i][actuatorSpeed];
+        int target=steps[i][actuatorTarget];
 
-}
-
-void checkActuators(){
-  for (int i=0;i<numActuators;i++){
-    if(actuatorPosition[i][0]==1){
-      for (int i=0;i<numActuators;i++){
-        analogRead(actuatorPins[0][0]);
-      }
-
-      if(actuatorPosition[i][1]<actuatorPosition[i][2]){
-        digitalWrite(actuatorPins[i][0],HIGH);
-        digitalWrite(actuatorPins[i][1],LOW);
-        analogWrite(actuatorPins[i][2],70);
-      }
-      else if(actuatorPosition[i][0]>actuatorPosition[i][2]){
-        digitalWrite(actuatorPins[i][0],LOW);
-        digitalWrite(actuatorPins[i][1],HIGH);
-        analogWrite(actuatorPins[i][2],70);
-      }
-    }
-  }
-}
-
-void checkStepper(){
-    for (int i=0;i<numSteppers;i++){
-    if(stepperPosition[i][0]==1){
-      for (int i=0;i<numActuators;i++){
-        analogRead(actuatorPins[0][0]);
-      }
-
-      if(stepperPosition[i][1]<stepperPosition[i][2]){
-        digitalWrite(stepperPins[i][0],HIGH);
-        digitalWrite(stepperPins[i][1],HIGH);
-        delayMicroseconds(20);
-        digitalWrite(stepperPins[i][1],LOW);
-        stepperPosition[i][0]++;
-      }
-      else if(stepperPosition[i][0]>stepperPosition[i][2]){
-        digitalWrite(stepperPins[i][0],HIGH);
-        digitalWrite(stepperPins[i][1],HIGH);
-        delayMicroseconds(20);
-        digitalWrite(stepperPins[i][1],LOW);
-        stepperPosition[i][0]--;
+        int cur =analogRead(actuatorPins[id][actuatorPosition]);
         
+        if (abs(cur-target)<10){
+          steps[i][stepFinished]=1;
+        }        
+        else if (cur<target){
+           digitalWrite(actuatorPins[id][actuatorIn],HIGH);
+           digitalWrite(actuatorPins[id][actuatorOut],LOW);
+           analogWrite(actuatorPins[id][actuatorSpeed],spd);
+          
+        }
+        else if(cur>target){
+          digitalWrite(actuatorPins[i][actuatorIn],LOW);
+          digitalWrite(actuatorPins[i][actuatorOut],HIGH);
+          analogWrite(actuatorPins[i][actuatorSpeed],70);
+        }
+}
+
+void moveStepper(int i){
+  
+        int id=steps[i][devId];
+        int spd=steps[i][stepperSpeed];
+        int target=steps[i][stepperTarget];
+  
+      if(stepperPosition[id]<target){
+        digitalWrite(stepperPins[id][0],HIGH);
+        digitalWrite(stepperPins[id][1],HIGH);
+        delayMicroseconds(20);
+        digitalWrite(stepperPins[id][1],LOW);
+        stepperPosition[id]++;
       }
-    }
-  }
+      else if(stepperPosition[id]<target){
+        digitalWrite(stepperPins[id][0],HIGH);
+        digitalWrite(stepperPins[id][1],HIGH);
+        delayMicroseconds(20);
+        digitalWrite(stepperPins[id][1],LOW);
+        stepperPosition[id]--;
+      }
+      if(stepperPosition[id]==target){
+        steps[i][stepFinished]=1;
+      }
+
 
 }
 
 
-
+void checkSteps(){
+    for (int i=0;i<numSteps;i++){
+      for (int j=0;j<numTests;j++){
+          if ((steps[i][stepTest]==j)&&(steps[i][stepNumber]==tests[j][currentStep])&&steps[i][stepFinished]!=1 ){
+            switch(steps[i][stepType]){
+             case actuator:
+               moveActuator(i);
+             break;
+             case stepper:
+               moveStepper(i);
+             break;
+             case pause:
+             break;
+             
+            } 
+          }        
+      }
+    }
+  
+}
 
 
