@@ -2,10 +2,10 @@ int numActuators=3;
 int numSteppers=1;
 
 //Serial 
-char inputString[] = ""; 
+char inputString[512] = ""; 
 int sI=0;// incoming serial  byte
 
-JsonParser<32> parser;
+JsonParser<128> parser;
 
 int numTests=4;
 int numSteps=0;
@@ -22,6 +22,10 @@ int numSteps=0;
 #define stepperSpeed   8
 #define stepFinished   9
 #define stepFrequency  10
+
+int steps[][11]={ //see step array value map above
+  {0,0,0,0,0,0,0,0,0}
+};
 
 
 
@@ -65,9 +69,7 @@ int tests[][3]={ // see Test aray value Map above
   {0,0,0}
 };
 
-int steps[][11]={ //see step array value map above
-  {0,0,0,0,0,0,0,0,0}
-};
+
 
 
 

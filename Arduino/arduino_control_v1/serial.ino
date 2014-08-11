@@ -10,10 +10,13 @@ void Read() {
     // so the main loop can do something about it:
     if (inputString[sI] == '\n') {
       inputString[sI] = '\0';
+            Serial.println("tried");
       JsonHashTable hashTable = parser.parseHashTable(inputString);
+
       if (hashTable.success())
       {
-        //{"test":1,"Actions":[{"stepID":1,"MaxSpeed":},{}]}
+        Serial.println("success");
+        //{"testid":1,"stepid":1,"frequency":1,"target":100}
       int testid = hashTable.getLong("testid");
       if (hashTable.containsKey("type")){
               int type = hashTable.getLong("type");
@@ -36,6 +39,7 @@ void Read() {
       }
       else if (hashTable.containsKey("count")){
         tests[testid][targetCycle]= hashTable.getLong("count");
+        Serial.println(tests[testid][targetCycle]);
       }
       
 
