@@ -7,6 +7,7 @@ var serialConnected=false;
 var serialNumber="";
 var serialFlashed=false;
 var tinyGHomed=false;
+var serialQueue=[];
 
 var jogFeedFwd=false;
 var yAt0=false;
@@ -131,11 +132,6 @@ function setPosition(position) {
   console.log(position);
   TinyG.send(position);
 };
-
-
-
-
-
 
 
 function useInput(st) {
@@ -295,9 +291,9 @@ onload = function() {
 
   $( "#sndtst" ).click(function() {
 
-		window.setTimeout(function(){TinyGSafeWrite('{"tid":0,"sid":0,"tpe":0,"freq":1,"tar":100,"spd":70,"devid":0}' )},1000);
-		window.setTimeout(function(){TinyGSafeWrite('{"tid":0,"sid":1,"tpe":0,"freq":1,"tar":50,"spd":70,"devid":0}' )},1000);
-		window.setTimeout(function(){TinyGSafeWrite('{"tid":0,"cnt":1000}' )},1000);
+		setTimeout(function(){TinyGSafeWrite('{"tid":0,"sid":0,"tpe":0,"freq":1,"tar":100,"spd":70,"devid":0}' );},100);
+		setTimeout(function(){TinyGSafeWrite('{"tid":0,"sid":1,"tpe":0,"freq":1,"tar":50,"spd":70,"devid":0}' );},1000);
+		setTimeout(function(){TinyGSafeWrite('{"tid":0,"cnt":1000}');},2000);
 });
 
 
@@ -339,7 +335,7 @@ var str2ab = function(str) {
 function TinyGSafeWrite(st) {
   try {
     console.log("write: "+st);
-    TinyG.send(st);
+    TinyG.send(st+'\n');
     //delay(70);
   } 
   catch (err) {
@@ -421,4 +417,145 @@ function sendFeed(f){
       feedSent=f;
       yAt0=false;
 }
+
+
+
+//////////////////////////////////////////////////////////////////////////// UI
+
+  $(function() {
+  
+  	  $( ".leftList .portlet" )
+      .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
+      .find( ".portlet-header" )
+        .addClass( "ui-widget-header ui-corner-all" )
+        .prepend( "<span class='sortIcon ui-icon ui-icon-arrowthick-2-n-s'> <span class='ui-icon ui-icon-plusthick portlet-toggle'></span>");
+    
+	
+  	$("#defaultTab").addClass("newTabHTML");
+	$("#defaultTab").attr("id","");
+	var tabHTML=$(".newTabHTML").clone();
+	$(".newTabHTML").attr("id","defaultTab");
+	$("#defaultTab").removeClass("newTabHTML");
+	
+    var tabFresh = $( "#tabs" ).tabs();
+	$(".slider").slider({
+	  range: "min",
+      value: 2,
+      min: .1,
+      max: 3,
+      slide: function( event, ui ) {
+        $( "#amount" ).val( "$" + ui.value );
+      }
+	  });
+	
+	$( "input[type=submit], button, .button" )
+      .button()
+      .click(function( event ) {
+        event.preventDefault();
+      });
+	
+	$( ".sortable" ).sortable({
+	  items: "li:not(.head)",
+      revert: true,
+	  handle: ".portlet-header",
+	  receive:function(){
+	  refreshPortlets();
+	  }
+    });
+    $( ".leftList li" ).draggable({
+      connectToSortable: ".sortable ",
+	  handle: ".portlet-header",
+      helper: "clone",
+      revert: "invalid"
+    });
+	
+	
+    $( "ul, li" ).disableSelection();
+	
+
+		
+		
+	$( document ).on("click",".portlet-toggle",function(){
+      var icon = $( this );
+      icon.toggleClass( "ui-icon-minusthick ui-icon-plusthick" );
+      icon.closest( ".portlet" ).find( ".portlet-content" ).toggle();
+    });
+  
+	var tabCount=2;
+	
+
+	
+	$("#newTab").click(function(){
+	var li="<li><a id='tabtop"+tabCount+"' href='#Tab-"+tabCount+"' role='presentation'>Test "+tabCount+"</a></li>";
+	$(li).insertBefore($("#newTab").parent());
+	//tabFresh.find( ".ui-tabs-nav" ).append( li );
+	tabFresh.append($(tabHTML.clone()));
+	$(".newTabHTML").attr("id","#Tab-"+tabCount);
+	$(".newTabHTML").attr("role","tabpanel");
+	$(".newTabHTML").addClass("ui-tabs-panel ui-widget-content ui-corner-bottom");
+	$(".newTabHTML").removeClass("newTabHTML");
+	
+	// $( "#tabs" ).tabs();
+	tabFresh.tabs("refresh");
+	//$("#tabs").tabs('load', tabCount-2);
+	tabCount++;
+	refreshPortlets();
+	
+	});
+	$(".trash").droppable({
+    accept: ".sortable li",
+    hoverClass: "ui-state-hover",
+    drop: function(ev, ui) {
+        ui.draggable.remove();
+    }
+	});
+	
+	
+  });
+  
+
+  function refreshPortlets(){
+
+	
+	$( ".spinner" ).spinner({
+	  min: 1,
+      step: 1,
+      start: 1
+	});
+	
+	
+	$(".slider").slider();
+   	$( "input[type=submit], button, .button" ).button();
+	
+	$( ".sortable" ).sortable({
+	  connectWith:".trash",
+	  items: "li:not(.head)",
+      revert: true,
+	  handle: ".portlet-header",
+	  receive:function(){
+	  refreshPortlets();
+	  }
+    });
+    $( ".leftList li" ).draggable({
+      connectToSortable: ".sortable",
+	  handle: ".portlet-header",
+      helper: "clone",
+      revert: "invalid"
+    });
+    $( "ul, li" ).disableSelection();
+	
+	  $( ".sortable .portlet" )
+      .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
+      .find( ".portlet-header" )
+      .addClass( "ui-state-highlight ui-corner-all" );
+	  
+	  	$(".trash").droppable({
+    accept: ".sortable li",
+    hoverClass: "ui-state-hover",
+    drop: function(ev, ui) {
+        ui.draggable.remove();
+    }
+	});
+  }
+  
 

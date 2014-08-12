@@ -43,6 +43,12 @@ void Read() {
                 case stepper:
                 
                   break;
+                case pause:
+                    steps[numSteps][stepTest]=testid;
+                    steps[numSteps][stepType]=type;
+                    steps[numSteps][pauseLength]=hashTable.getLong("pause");
+                    stepStart[numSteps]=0;
+                  break;
                   
                   
               }

@@ -7,8 +7,7 @@ void setup(){
   Serial.begin(9600);
   //setupMotors();
   setupActuators();
-  
-      Serial.println("Board Reset");
+  Serial.println("{\"Board Reset\":\"\"}");
 
   //set actuator dir  (temp)
   digitalWrite(actuatorPins[0][0],LOW);
@@ -88,6 +87,19 @@ void moveStepper(int i){
       }
 }
 
+void movePause(int i){
+        
+        if (stepStart[i]==0){
+          stepStart[i]=millis();
+        }
+         
+        if (millis()-stepStart[i]>steps[i][pauseLength]){
+          steps[i][stepFinished]=1;
+          Serial.println("paused");
+          stepStart[i]=0;
+        }
+}
+
 
 void checkSteps(){
   for (int j=0;j<numTests;j++){
@@ -105,6 +117,7 @@ void checkSteps(){
                moveStepper(i);
                break;
              case pause:
+               movePause(i);
                break;
              
             } 

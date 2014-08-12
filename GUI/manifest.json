@@ -17,9 +17,5 @@
 
   "permissions": [
     "serial"
-  ],
-  
-  "sandbox": {
-	"pages": ["paper.html"]
-  }
+  ]
 }
