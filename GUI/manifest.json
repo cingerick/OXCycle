@@ -1,5 +1,5 @@
 {
-  "name": "DIWire Chrome",
+  "name": "OXO Cycle Tester",
   "version": "0.25",
   "manifest_version": 2,
   "minimum_chrome_version": "23",
@@ -12,7 +12,6 @@
   },
 
   "icons": {
-
   },
 
   "permissions": [
