@@ -56,6 +56,9 @@ void Read() {
         tests[testid][isRunning]=1;
         Serial.println(tests[testid][targetCycle]);
       }
+      else if (hashTable.containsKey("id")){
+        Serial.println("{\"id\":1}");
+      }
         
       }
       else{

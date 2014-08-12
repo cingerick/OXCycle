@@ -80,7 +80,7 @@ SerialConnection.prototype.onReceiveError = function(errorInfo) {
 };
 
 SerialConnection.prototype.connect = function(path) {
-  serial.connect(path,{bitrate:115200},this.onConnectComplete.bind(this))
+  serial.connect(path,{bitrate:9600},this.onConnectComplete.bind(this))
 };
 
 SerialConnection.prototype.send = function(msg) {
@@ -145,6 +145,7 @@ try
    var r = json.r!=undefined  ? json.r  : null;
    var sr= json.sr!=undefined ? json.sr : null;
    var er= json.er!=undefined ? json.er : null;
+   var id= json.er!=undefined ? json.er : null;
 	if (sr!=null){
 	    var check1 = sr.posy!=undefined ? sr.posy : -999 ;
         var check2 = sr.posx!=undefined ? sr.posx : -999 ;
@@ -159,6 +160,10 @@ try
 	 else if (er!=null){
             var check5=er.val!=undefined ? er.val : -1 ;
       }
+	 else if (id!=null){
+            tinyGFlashReady=true;
+      }
+	  
       
       if (check3<=0){
         check3= json.f!=undefined ? json.f.length : -1;
@@ -246,33 +251,14 @@ function testSerial(ports){
        TinyG.disconnect(connectionId, openSelectedPort);
       //return;
 			}
-  try{
-		println(port.path);
-		TinyG.connect(port.path);
-	}
+	  try{
+			println(port.path);
+			TinyG.connect(port.path);
+		}
 	catch(err){
 		println(err);
 	}
-	tinyGFlashReady=false;
-	setTimeout(function(){TinyGSafeWrite("{\"id\":\"\"}"+'\n')},100);
-	setTimeout(function(){
-	if (tinyGFlashReady) {
-        println("Connected!");
-        serialConnected=true;
-        //calculateFormula();
-        //break;
-		return false;
-    }
-	else {
-        try {
-		  TinyG.disconnect();
-          serialConnected=false;
-        }
-        catch (e) {
-		println("bla"+e);
-        }
-      }
-	  },500);
+
 	  
   });
 
@@ -307,6 +293,18 @@ onload = function() {
   $("#cmd").val("");
 });
 
+  $( "#sndtst" ).click(function() {
+
+		window.setTimeout(function(){TinyGSafeWrite('{"tid":0,"sid":0,"tpe":0,"freq":1,"tar":100,"spd":70,"devid":0}' )},1000);
+		window.setTimeout(function(){TinyGSafeWrite('{"tid":0,"sid":1,"tpe":0,"freq":1,"tar":50,"spd":70,"devid":0}' )},1000);
+		window.setTimeout(function(){TinyGSafeWrite('{"tid":0,"cnt":1000}' )},1000);
+});
+
+
+
+
+
+
   $( "#sndang" ).click(function() {
 		sendAngle($("#ang").val()+'\n');
   $("#ang").val("");
@@ -336,15 +334,6 @@ var str2ab = function(str) {
 
 
 
-
-
-
-
-
-
-
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 function TinyGSafeWrite(st) {
@@ -364,59 +353,6 @@ function TinyGSafeWrite(st) {
 
 function println(st){
 	console.log(st);
-}
-
-
-function setSerialNumber(st){
- serialNumber=st;
-}
-
-function sendAngle(a){
-  // if (!serialConnected){
-     // testSerial();
-  // }
-  // if (!serialFlashed){
-     // flashTinyG();
-  // }
-  // if (!tinyGHomed){
-    // tinyGHome();
-    // delay(100);
-  // }
-	  if (lastangle>0&&a<0){
-		duckflag=true;
-		duck(10);
-	  }
-	  else if (lastangle<0&&a>0){
-		duckflag=true;
-		duck(-10);
-	  }
-    var b = Math.round(bendFormula(a)*1000)/1000;
-    tinyGCommandReady=false;
-    setTimeout(function(){tinyGCode ("g1 f"+XFeedRate+" x"+b);},1000);
-    xAt0=false;
-    tinyGCode ("g0 x0");
-    if (a>0) {
-        lastangle=1;
-    }
-    else if (a<0) {
-        lastangle=-1;
-    }
-  
-}
-
-function bendFormula(ang) {
-  if (ang>0) {
-       ang=polyFormulaPos[3]*ang*ang*ang+polyFormulaPos[2]*ang*ang+polyFormulaPos[1]*ang+polyFormulaPos[0];
-       ang=ang-homeOffsetPos;
-  }
-  else if (ang<0) {
-     ang=Math.abs(ang);
-     ang=(polyFormulaNeg[3]*ang*ang*ang+polyFormulaNeg[2]*ang*ang+polyFormulaNeg[1]*ang+polyFormulaNeg[0]);
-     ang=-1*(homeOffsetNeg-ang);
-  }
-
-  //safePrint(str(ang));
-  return ang;
 }
 
 function tinyGCode(IN){
@@ -486,35 +422,3 @@ function sendFeed(f){
       yAt0=false;
 }
 
-function duck(duckdist) {
-  if (duckdist>0){
-    duckdist=(Math.round((homeOffsetNeg-homeOffsetPos)*1000))/1000;
-  }
-  else{
-    duckdist=(Math.round((homeOffsetPos-homeOffsetNeg)*1000))/1000;
-  }
-  tinyGCommandReady=false;
-
-  tinyGCode ("g90"); //move to other side of wire
-  
-  setTimeout(function(){tinyGCode ("g0 x"+duckdist);},10); //move to other side of wire
-  //delay(50);
-
-  //delay(1000);
-  
-//  long duckStartMillis=System.currentTimeMillis();
-//  while(recievedX!=duckdist && (System.currentTimeMillis()-duckStartMillis)<2000 ){
-//
-//  }
-  xAt0=false;
-  tinyGCode("g28.3x0"); //reset x coordinate as 0
-  
-  //delay(100);
-  if (duckdist<0){
-   lastangle=1;
-  }
-  else{
-    lastangle=-1;
-  }
-  
-}
