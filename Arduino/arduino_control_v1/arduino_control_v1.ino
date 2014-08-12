@@ -5,7 +5,7 @@
 
 void setup(){
   Serial.begin(9600);
-  setupMotors();
+  //setupMotors();
   setupActuators();
   
       Serial.println("Board Reset");
@@ -18,38 +18,55 @@ void setup(){
 void loop(){
 
   //checkActuators();
-//checkSteps();
+checkSteps();
 Read();
 }
 
 void moveActuator(int i){
 
         int id=steps[i][devId];
-        int spd=steps[i][actuatorSpeed];
+        int spd=steps[i][stepSpeed];
         int target=steps[i][actuatorTarget];
 
         int cur =analogRead(actuatorPins[id][actuatorPosition]);
+        Serial.println(target);
+        Serial.println(cur);
+        
+        if (stepStart[i]==0){
+          stepStart[i]=millis();
+        }
         
         if (abs(cur-target)<10){
           steps[i][stepFinished]=1;
+          stepStart[i]=0;
+          digitalWrite(actuatorPins[i][actuatorIn],LOW);
+          digitalWrite(actuatorPins[i][actuatorOut],LOW);
         }        
-        else if (cur<target){
+        else if (millis()-stepStart[i]>actuatorTimeout){
+          steps[i][stepFinished]=1;
+          Serial.println("timeout");
+          tests[steps[i][stepTest]][errorCount]++;
+          stepStart[i]=0;
+          digitalWrite(actuatorPins[i][actuatorIn],LOW);
+          digitalWrite(actuatorPins[i][actuatorOut],LOW);
+        }
+        else if (cur>target){
            digitalWrite(actuatorPins[id][actuatorIn],HIGH);
            digitalWrite(actuatorPins[id][actuatorOut],LOW);
            analogWrite(actuatorPins[id][actuatorSpeed],spd);
           
         }
-        else if(cur>target){
+        else if(cur<target){
           digitalWrite(actuatorPins[i][actuatorIn],LOW);
           digitalWrite(actuatorPins[i][actuatorOut],HIGH);
-          analogWrite(actuatorPins[i][actuatorSpeed],70);
+          analogWrite(actuatorPins[i][actuatorSpeed],spd);
         }
 }
 
 void moveStepper(int i){
   
         int id=steps[i][devId];
-        int spd=steps[i][stepperSpeed];
+        int spd=steps[i][stepSpeed];
         int target=steps[i][stepperTarget];
   
       if(stepperPosition[id]<target){
@@ -74,12 +91,14 @@ void moveStepper(int i){
 
 void checkSteps(){
   for (int j=0;j<numTests;j++){
+    if(tests[j][isRunning]==1){
     boolean stepFlag=false;
     for (int i=0;i<numSteps;i++){
           if ((steps[i][stepTest]==j)&&(steps[i][stepNumber]==tests[j][currentStep])&&steps[i][stepFinished]!=1 && tests[j][currentCycle] % steps[i][stepFrequency]==0){
             stepFlag=true;
             switch(steps[i][stepType]){
              case actuator:
+               Serial.println("moveAct");
                moveActuator(i);
                break;
              case stepper:
@@ -93,14 +112,30 @@ void checkSteps(){
       }
       if (!stepFlag){
         if (tests[j][currentStep]<numSteps){
+          for (int i=0;i<numSteps;i++){
+            if (steps[i][stepTest]==j&&steps[i][stepNumber]==tests[j][currentStep]){
+              steps[i][stepFinished]=0;
+            }
+          }
           tests[j][currentStep]++;
         }
         else{
          tests[j][currentStep]=0;
          tests[j][currentCycle]++;
+         Serial.println("Test:");
+         Serial.println(j);
+         Serial.println("cycle:");
+         Serial.println(tests[j][currentCycle]);
+         
+         if (tests[j][currentCycle]>tests[j][targetCycle]){
+           tests[j][isRunning]=0;
+         }
+
+
         }
         
       }
+  }
     }
   
 }
