@@ -1,13 +1,18 @@
+//#include <JsonGenerator.h>
 #include <JsonParser.h>
-#include "declarations.h"
 
+using namespace ArduinoJson::Parser;
+//using namespace ArduinoJson::Generator;
+
+#include "declarations.h"
 
 
 void setup(){
   Serial.begin(9600);
   //setupMotors();
   setupActuators();
-  Serial.println("{\"Board Reset\":\"\"}");
+  Serial.println("{\"r\":{\"id\":\"12\"}}");
+  //sendResponse(makeJSON("id","12"));
 
   //set actuator dir  (temp)
   digitalWrite(actuatorPins[0][0],LOW);

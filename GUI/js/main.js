@@ -11,6 +11,7 @@ var serialQueue=[];
 
 
 
+
 /* Interprets an ArrayBuffer as UTF-8 encoded string data. */
 var ab2str = function(buf) {
   var bufView = new Uint8Array(buf);
@@ -33,7 +34,10 @@ SerialConnection.prototype.onConnectComplete = function(connectionInfo) {
     log("Connection failed.");
     return;
   }
+
   this.connectionId = connectionInfo.connectionId;
+  //log(this.connectionId);
+  //chrome.serial.setControlSignals(this.connectionId, {dtr:false},function(){});
   chrome.serial.onReceive.addListener(this.boundOnReceive);
   chrome.serial.onReceiveError.addListener(this.boundOnReceiveError);
   this.onConnect.dispatch();
@@ -63,7 +67,9 @@ SerialConnection.prototype.onReceiveError = function(errorInfo) {
 };
 
 SerialConnection.prototype.connect = function(path) {
-  serial.connect(path,{bitrate:9600},this.onConnectComplete.bind(this))
+  //chrome.serial.setControlSignals(0, {dtr:false},function(){});
+  serial.connect(path,{bitrate:9600},this.onConnectComplete.bind(this));
+  
 };
 
 SerialConnection.prototype.send = function(msg) {
@@ -114,12 +120,8 @@ try
    var r = json.r!=undefined  ? json.r  : null;
    var er= json.er!=undefined ? json.er : null;
    var id= json.er!=undefined ? json.er : null;
-	else if (r!=null){
-          var check1 = r.posy!=undefined ? r.posy : -999 ;
-          var check2 = r.posx!=undefined ? r.posx : -999 ;
-          var check3 = r.f!=undefined ? r.f.length :0;
-          var check4 = r.id!=undefined ? r.id : null ;
-          var check7 = r.homx!=undefined ? r.homx : 0 ;
+	if (r!=null){
+          var check1 = r.id!=undefined ? r.id : null ;
      }
 	 else if (er!=null){
             var check5=er.val!=undefined ? er.val : -1 ;
@@ -128,8 +130,8 @@ try
             tinyGFlashReady=true;
       }
 
-      if (check3 > 0) {
-        tinyGFlashReady=true;
+      if (check1 !=null ) {
+        println("conected to"+check1)
       }	
 }
 catch(e)
@@ -163,15 +165,6 @@ function testSerial(ports){
   });
 
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -326,31 +319,33 @@ function sendFeed(f){
 
 //////////////////////////////////////////////////////////////////////////// UI
 
+
+
   $(function() {
   
-  	  $( ".leftList .portlet" )
-      .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
-      .find( ".portlet-header" )
-        .addClass( "ui-widget-header ui-corner-all" )
-        .prepend( "<span class='sortIcon ui-icon ui-icon-arrowthick-2-n-s'> <span class='ui-icon ui-icon-plusthick portlet-toggle'></span>");
+  $( ".leftList .portlet" )
+  .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
+  .find( ".portlet-header" )
+  .addClass( "ui-widget-header ui-corner-all" )
+  .prepend( "<span class='sortIcon ui-icon ui-icon-arrowthick-2-n-s'> <span class='ui-icon ui-icon-plusthick portlet-toggle'></span>");
     
 	
-  	$("#defaultTab").addClass("newTabHTML");
+  $("#defaultTab").addClass("newTabHTML");
 	$("#defaultTab").attr("id","");
 	var tabHTML=$(".newTabHTML").clone();
 	$(".newTabHTML").attr("id","defaultTab");
 	$("#defaultTab").removeClass("newTabHTML");
 	
-    var tabFresh = $( "#tabs" ).tabs();
-	$(".slider").slider({
-	  range: "min",
-      value: 2,
-      min: .1,
-      max: 3,
-      slide: function( event, ui ) {
-        $( "#amount" ).val( "$" + ui.value );
-      }
-	  });
+  var tabFresh = $( "#tabs" ).tabs();
+	// $(".slider").slider({
+	//   range: "min",
+ //      value: 2,
+ //      min: .1,
+ //      max: 3,
+ //      slide: function( event, ui ) {
+ //        $( "#amount" ).val( "$" + ui.value );
+ //      }
+	//   });
 	
 	$( "input[type=submit], button, .button" )
       .button()
@@ -375,6 +370,23 @@ function sendFeed(f){
 	
 	
     $( "ul, li" ).disableSelection();
+
+
+
+    $(".sendTest").click(function(e){
+
+    var dat=$(this).closest(".actionList").find("form").each(function(){
+        var dat=$(this).serializeArray();
+        var myjson = {}; 
+        $.each(dat, function() { myjson[this.name] = this.value; }); 
+        serialQueue.push(myjson);
+        //println(myjson);
+    });
+      
+ 
+
+
+    });
 	
 
 		
@@ -428,7 +440,19 @@ function sendFeed(f){
 	});
 	
 	
-	$(".slider").slider();
+	//$(".slider").slider();
+
+  $( ".slider" ).slider({
+        range: "min",
+        min: 0,
+        max: 100,
+        slide: function( event, ui ) {
+          $(ui.handle).parent().closest("form").find('input[name="'+$(ui.handle).parent().attr('name')+'"]').val(ui.value );
+        }
+  });
+
+
+
    	$( "input[type=submit], button, .button" ).button();
 	
 	$( ".sortable" ).sortable({
@@ -436,6 +460,11 @@ function sendFeed(f){
 	  items: "li:not(.head)",
       revert: true,
 	  handle: ".portlet-header",
+    stop: function(event, ui) {
+        $(ui.item).closest("ul").find("li").each(function(){
+          $(this).find('input[name="sid"]').val($(this).index());
+        });
+    },
 	  receive:function(){
 	  refreshPortlets();
 	  }
@@ -462,4 +491,11 @@ function sendFeed(f){
 	});
   }
   
+setInterval(function(){flushQueue();}, 1000);
+function flushQueue(){
+  if (serialQueue.length>0){
+    println(serialQueue[0]);
+    serialQueue.shift();
+  }
 
+}

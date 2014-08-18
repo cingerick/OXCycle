@@ -13,10 +13,6 @@
 	<script src="js/jquery.ui.touch-punch.min.js"></script>
 	<script src="js/jquery.dropdownPlain.js"></script>
 	<script src="js/main.js"></script>
-    
-  
-
- 
 </head>
 <body>
 
@@ -39,8 +35,7 @@
 			</div>
 			</div>
 	</div>
-		
-		
+
 	<div id="content-wrap">
 		
 			<div id="tabs">
@@ -57,8 +52,9 @@
 							<div class="portlet-header">Push/Pull</div>
 							<div class="portlet-content" style="display:none">	
 							<ul>
+								<form>
 								<li><label>Actuator #</label>
-									<select>
+									<select name="devid">
 									  <option value="1">1</option>
 									  <option value="2">2</option>
 									  <option value="3">3</option>
@@ -66,20 +62,30 @@
 								</li>
 								<li>
 									<div>Throw</div>
-									<div class="slider actuatorSlider"></div>
+									<div class="slider actuatorSlider" name="tar"></div>
+
 									<div class="testBtn button">test</div>
 								</li>
 								<li>
 									<div class="button actuatorBtn">use current</div></li>
 								<li>
 									<div>Motor Speed</div>
-									<div class="slider actuatorSlider"></div>
+									<div class="slider actuatorSlider" name="spd"></div>
 								
 								</li>
 								<li>
 									<div>frequency:every </div> 
-									<div><input class="spinner"></div>
+									<div><input name="freq" class="spinner" value=1></div>
 									<div>nth cycle</div></li>
+
+
+									<input type="hidden" name="spd" value=0>
+									<input type="hidden" name="tar" value=0>
+									<input type="hidden" name="tid" value=0>
+									<input type="hidden" name="sid" value=0>
+									<input type="hidden" name="tpe" value=0>
+
+								</form>
 							</ul>
 							
 							
@@ -157,8 +163,8 @@
 					  </li>
 				  </ul>
 				
-					<ul class="sortable connectedSortable">
-					  <li class="ui-state-default head">Drag actions here</li>
+					<ul class="actionList sortable connectedSortable">
+					  <li class="ui-state-default head">Drag actions here<DIV class="button sendTest">send</DIV></li>
 					</ul>
 					
 				 <div class=" trash ui-state-error head">Trash</div>
