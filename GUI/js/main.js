@@ -1,102 +1,30 @@
-var connectionId = -1;
-var readBuffer = "";
-const serial = chrome.serial;
-var tinyGFlashReady=false;
-var tinyGCommandReady=false;
+
+var ArduinoReady=false;
+var ArduinoCommandReady=false;
 var serialConnected=false;
 var serialNumber="";
 var serialFlashed=false;
-var tinyGHomed=false;
+var ArduinoHomed=false;
 var serialQueue=[];
+var portSearch;
+var eligiblePorts;
+var recieveError=false;
+var recieveSuccess=false;
+var jsonErrorCount=0;
+var lastSent="";
+var writeDirectory;
 
 
+var Arduino = new SerialConnection();
 
-
-/* Interprets an ArrayBuffer as UTF-8 encoded string data. */
-var ab2str = function(buf) {
-  var bufView = new Uint8Array(buf);
-  var encodedString = String.fromCharCode.apply(null, bufView);
-  return decodeURIComponent(escape(encodedString));
-};
-
-var SerialConnection = function() {
-  this.connectionId = -1;
-  this.lineBuffer = "";
-  this.boundOnReceive = this.onReceive.bind(this);
-  this.boundOnReceiveError = this.onReceiveError.bind(this);
-  this.onConnect = new chrome.Event();
-  this.onReadLine = new chrome.Event();
-  this.onError = new chrome.Event();
-};
-
-SerialConnection.prototype.onConnectComplete = function(connectionInfo) {
-  if (!connectionInfo) {
-    log("Connection failed.");
-    return;
-  }
-
-  this.connectionId = connectionInfo.connectionId;
-  //log(this.connectionId);
-  //chrome.serial.setControlSignals(this.connectionId, {dtr:false},function(){});
-  chrome.serial.onReceive.addListener(this.boundOnReceive);
-  chrome.serial.onReceiveError.addListener(this.boundOnReceiveError);
-  this.onConnect.dispatch();
-};
-
-SerialConnection.prototype.onReceive = function(receiveInfo) {
-  if (receiveInfo.connectionId !== this.connectionId) {
-    return;
-  }
-   this.lineBuffer += ab2str(receiveInfo.data);
-
-  var index;
-  while ((index = this.lineBuffer.indexOf('\n')) >= 0) {
-    var line = this.lineBuffer.substr(0, index + 1);
-    this.onReadLine.dispatch(line);
-	useInput(line);
-	$("#txt").append(line);
-    this.lineBuffer = this.lineBuffer.substr(index + 1);
-  } 
-  
-};
-
-SerialConnection.prototype.onReceiveError = function(errorInfo) {
-  if (errorInfo.connectionId === this.connectionId) {
-    this.onError.dispatch(errorInfo.error);
-  }
-};
-
-SerialConnection.prototype.connect = function(path) {
-  //chrome.serial.setControlSignals(0, {dtr:false},function(){});
-  serial.connect(path,{bitrate:9600},this.onConnectComplete.bind(this));
-  
-};
-
-SerialConnection.prototype.send = function(msg) {
-  if (this.connectionId < 0) {
-    throw 'Invalid connection';
-  }
-  serial.send(this.connectionId, str2ab(msg), function() {});
-};
-
-SerialConnection.prototype.disconnect = function() {
-  if (this.connectionId < 0) {
-    throw 'Invalid connection';
-  }
-  serial.disconnect(this.connectionId, function() {});
-};
-
-var TinyG = new SerialConnection();
-
-TinyG.onConnect.addListener(function(path) {
-  console.log('connected to: ' + this.DEVICE_PATH);
-  TinyG.send("hello arduino");
+Arduino.onConnect.addListener(function(path) {
+  //console.log('connected to: ' + this.DEVICE_PATH);
+  //Arduino.send("hello arduino");
 });
 
-TinyG.onReadLine.addListener(function(line) {
-  console.log('read line: ' + line);
+Arduino.onReadLine.addListener(function(line) {
+  //console.log('read line: ' + line);
 });
-
 
 
 function onOpen(openInfo) {
@@ -114,63 +42,75 @@ function onOpen(openInfo) {
 };
 
 function useInput(st) {
-try
-{
-   var json = JSON.parse(st);
-   var r = json.r!=undefined  ? json.r  : null;
-   var er= json.er!=undefined ? json.er : null;
-   var id= json.er!=undefined ? json.er : null;
-	if (r!=null){
-          var check1 = r.id!=undefined ? r.id : null ;
-     }
-	 else if (er!=null){
-            var check5=er.val!=undefined ? er.val : -1 ;
+  println('Read: '+st);
+  try
+  {
+     var json = JSON.parse(st);
+     var r = json.r!=undefined  ? json.r  : null;
+  	if (r!=null){
+      var check1 = r.id!=undefined ? r.id : null ;
+      var jsonCheck = r.json!=undefined ? r.json : null ;
+    }
+    if (jsonCheck !=null ) {
+      if (jsonCheck){
+        recieveError=false;
+        recieveSuccess=true;
+        println("json success");
       }
-	 else if (id!=null){
-            tinyGFlashReady=true;
+      else{
+        recieveError=true;
+        recieveSuccess=false;
       }
-
-      if (check1 !=null ) {
-        println("conected to"+check1)
-      }	
+    } 
+    if (check1 !=null ) {
+      ArduinoReady=true;
+      recieveError=false;
+      recieveSuccess=true;
+      println("conected to: "+check1)
+    }	
+  }
+  catch(e)
+  {
+  	println(e);
+     println('invalid json');
+  }
 }
-catch(e)
-{
-	println(e);
-   println('invalid json');
-}
-};
 
 function setStatus(status) {
   document.getElementById('status').innerText = status;
 }
 
+function tryPorts(){
+  if (ArduinoReady || eligiblePorts.length==0){
+    clearInterval(portSearch);
+    return;
+  }
+
+    if (Arduino.connectionId != -1) {
+       Arduino.disconnect(connectionId, function() {});
+      //return;
+      }
+    try{
+      var tmpPrt=eligiblePorts.shift();
+      println("trying " +tmpPrt.path);
+      Arduino.connect(tmpPrt.path);
+    }
+  catch(err){
+    println(err);
+  }
+
+};
+
+
 function testSerial(ports){
-  var eligiblePorts = ports.filter(function(port) {
+  eligiblePorts = ports.filter(function(port) {
 	return !port.path.match(/[Bb]luetooth/) && (port.path.match(/\/dev\/tty/) || port.path.match(/COM[1234567890]/));
   });
-  eligiblePorts.every(function(port) {
-       if (TinyG.connectionId != -1) {
-       TinyG.disconnect(connectionId, openSelectedPort);
-      //return;
-			}
-	  try{
-			println(port.path);
-			TinyG.connect(port.path);
-		}
-	catch(err){
-		println(err);
-	}
-
-  });
-
+  ArduinoReady=false;
+  if (eligiblePorts.length>0){
+      portSearch=setInterval(function(){tryPorts();}, 200);
+  }
 }
-
-
-
-
-
-
 
 onload = function() {
   chrome.serial.getDevices(function(ports) {
@@ -182,34 +122,30 @@ onload = function() {
   });
   
   $( "#snd" ).click(function() {
-		TinyGSafeWrite($("#cmd").val()+'\n');
-  $("#cmd").val("");
-});
+		ArduinoSafeWrite($("#cmd").val()+'\n');
+    $("#cmd").val("");
+  });
 
   $( "#sndtst" ).click(function() {
-
-		setTimeout(function(){TinyGSafeWrite('{"tid":0,"sid":0,"tpe":0,"freq":1,"tar":100,"spd":70,"devid":0}' );},100);
-		setTimeout(function(){TinyGSafeWrite('{"tid":0,"sid":1,"tpe":0,"freq":1,"tar":50,"spd":70,"devid":0}' );},1000);
-		setTimeout(function(){TinyGSafeWrite('{"tid":0,"cnt":1000}');},2000);
-});
-
-
-
+		ArduinoSafeWrite('{"tid":0,"sid":0,"tpe":0,"freq":1,"tar":100,"spd":70,"devid":0}' );
+		ArduinoSafeWrite('{"tid":0,"sid":1,"tpe":0,"freq":1,"tar":50,"spd":70,"devid":0}' );
+		ArduinoSafeWrite('{"tid":0,"cnt":1000}');
+  });
 
 
 
   $( "#sndang" ).click(function() {
 		sendAngle($("#ang").val()+'\n');
-  $("#ang").val("");
-});
+    $("#ang").val("");
+  });
 
   $( "#sndfeed" ).click(function() {
 		sendFeed($("#feed").val()+'\n');
-  $("#feed").val("");
-});
+    $("#feed").val("");
+  });
 
   $( "#home" ).click(function() {
-		tinyGHome();
+		ArduinoHome();
 });
 
 };
@@ -226,102 +162,117 @@ var str2ab = function(str) {
 };
 
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-function TinyGSafeWrite(st) {
-  try {
-    console.log("write: "+st);
-    TinyG.send(st+'\n');
-    //delay(70);
-  } 
-  catch (err) {
-    //TinyG.stop();
-    console.log("Exception: "+err);
-    console.log("write fail");
-    //popUpWarning="connection";
-    //displayCase="warning";
-  }
+setInterval(function(){flushQueue();}, 1000);
+function flushQueue(){
+    if (serialQueue.length>0 && (recieveSuccess||jsonErrorCount>2 ) ){
+        recieveError=false;
+        recieveSuccess=false;
+        jsonErrorCount=0;
+        println("Sent "+serialQueue[0]+'\n');
+        Arduino.send(serialQueue[0]+'\n');
+        lastSent=serialQueue[0]+'\n';
+        serialQueue.shift();
+    }
+    else if (recieveError){
+      recieveError=false;
+      recieveSuccess=false;
+      Arduino.send(lastSent);
+      jsonErrorCount++;
+    }
+
+}
+
+function ArduinoSafeWrite(st){
+  serialQueue.push(st);
 }
 
 function println(st){
 	console.log(st);
 }
 
-function tinyGCode(IN){
-  TinyGSafeWrite ("{\"gc\":\""+IN+"\"}"+'\n');
+function ArduinoCode(IN){
+  ArduinoSafeWrite ("{\"gc\":\""+IN+"\"}"+'\n');
 }
 
-function tinyGSetting(set, va){
-  TinyGSafeWrite ("{\""+set+"\":"+va+"}"+'\n');
+function ArduinoSetting(set, va){
+  ArduinoSafeWrite ("{\""+set+"\":"+va+"}"+'\n');
 }
 
-function tinyGRequest(bla){
-  TinyGSafeWrite("{\""+bla+"\":\"\"}"+'\n');
+function ArduinoRequest(bla){
+  ArduinoSafeWrite("{\""+bla+"\":\"\"}"+'\n');
 }
-
-function tinyGHome() {
-  if (!serialConnected){
-    testSerial();
-  }
-  if (serialConnected){
-    tinyGHomed=false;
-    tinyGCommandReady=false;
-     //delay(50);
-     tinyGCode ("g28.3 x0"); //drop pin
-     tinyGCode ("g28.2 x0"); //drop pin
-     
-    //TinyGSafeWrite (homeText);
-    //delay(1000);
-    tinyGCode ("g28.3 y0"); //drop pin
-    yAt0=false;
-    flashStartMillis=System.currentTimeMillis();
-    //while(!tinyGCommandReady && (System.currentTimeMillis()-flashStartMillis)<7000 ){
-
-    //}
-    
-    
-   tinyGFlashReady=true;
-
-    tinyGRequest("homx");
-    homeResponse=false;
-    tinyGHomed=false;  
-    yAt0=false;
-    xAt0=false;
-	var d = new Date();
-    //var homeStartMillis= d.getMilliseconds();
-    while(!homeResponse && (Date.now()-d)<15000 ){
-
-    }
-	
-	
-    tinyGHomed=true;  
-    
-    tinyGRequest("posy");
-    tinyGRequest("posx");
-    //xAt0=true;
-    //yAt0=true;
-    //println(tinyGHomed);
-    lastangle=1;
-  }
-}
-
-
-function sendFeed(f){
-      tinyGCommandReady=false;
-      f=Math.round(f*1000)/1000;
-      tinyGCode ("g0 y"+f);
-      feedSent=f;
-      yAt0=false;
-}
-
-
 
 //////////////////////////////////////////////////////////////////////////// UI
 
 
+     function dataURItoBlob(dataURI, callback) {
+        // convert base64 to raw binary data held in a string
+        // doesn't handle URLEncoded DataURIs
+        println("here");
+
+        var byteString;
+        if (dataURI.split(',')[0].indexOf('base64') >= 0) {
+            byteString = atob(dataURI.split(',')[1]);
+        } else {
+            byteString = unescape(dataURI.split(',')[1]);
+        }
+
+        // separate out the mime component
+        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+        // write the bytes of the string to an ArrayBuffer
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+
+        // write the ArrayBuffer to a blob, and you're done
+        var BlobBuilder = window.WebKitBlobBuilder || window.MozBlobBuilder;
+        var bb = new BlobBuilder();
+        bb.append(ab);
+        return bb.getBlob(mimeString);
+    }
+
+    
+
+
+
+
+
+
+
+
+
 
   $(function() {
+
+    chrome.fileSystem.chooseEntry({type: 'openDirectory'}, function(entry){
+     writeDirectory =entry;
+    });
+
+
+
+
+  ///////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
   $( ".leftList .portlet" )
   .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
@@ -491,11 +442,3 @@ function sendFeed(f){
 	});
   }
   
-setInterval(function(){flushQueue();}, 1000);
-function flushQueue(){
-  if (serialQueue.length>0){
-    println(serialQueue[0]);
-    serialQueue.shift();
-  }
-
-}

@@ -6,6 +6,8 @@ using namespace ArduinoJson::Parser;
 
 #include "declarations.h"
 
+boolean debug=false;
+
 
 void setup(){
   Serial.begin(9600);
@@ -20,10 +22,9 @@ void setup(){
 
 }
 void loop(){
-
-  //checkActuators();
-checkSteps();
-Read();
+     //checkActuators();
+     checkSteps();
+     Read();
 }
 
 void moveActuator(int i){
@@ -33,8 +34,8 @@ void moveActuator(int i){
         int target=steps[i][actuatorTarget];
 
         int cur =analogRead(actuatorPins[id][actuatorPosition]);
-        Serial.println(target);
-        Serial.println(cur);
+        sendDebug(String(target));
+        sendDebug(String(cur));
         
         if (stepStart[i]==0){
           stepStart[i]=millis();
@@ -48,7 +49,7 @@ void moveActuator(int i){
         }        
         else if (millis()-stepStart[i]>actuatorTimeout){
           steps[i][stepFinished]=1;
-          Serial.println("timeout");
+          sendDebug("timeout");
           tests[steps[i][stepTest]][errorCount]++;
           stepStart[i]=0;
           digitalWrite(actuatorPins[i][actuatorIn],LOW);
@@ -100,7 +101,7 @@ void movePause(int i){
          
         if (millis()-stepStart[i]>steps[i][pauseLength]){
           steps[i][stepFinished]=1;
-          Serial.println("paused");
+          sendDebug("paused");
           stepStart[i]=0;
         }
 }
@@ -115,7 +116,7 @@ void checkSteps(){
             stepFlag=true;
             switch(steps[i][stepType]){
              case actuator:
-               Serial.println("moveAct");
+               sendDebug("moveAct");
                moveActuator(i);
                break;
              case stepper:
@@ -140,10 +141,10 @@ void checkSteps(){
         else{
          tests[j][currentStep]=0;
          tests[j][currentCycle]++;
-         Serial.println("Test:");
-         Serial.println(j);
-         Serial.println("cycle:");
-         Serial.println(tests[j][currentCycle]);
+         sendDebug("Test:");
+         sendDebug(String(j));
+         sendDebug("cycle:");
+         sendDebug(String(tests[j][currentCycle]));
          
          if (tests[j][currentCycle]>tests[j][targetCycle]){
            tests[j][isRunning]=0;

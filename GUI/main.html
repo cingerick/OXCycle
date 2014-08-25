@@ -12,7 +12,11 @@
 	<script src="js/jquery-ui.js"></script>
 	<script src="js/jquery.ui.touch-punch.min.js"></script>
 	<script src="js/jquery.dropdownPlain.js"></script>
+	<script src="js/serial.js"></script>
 	<script src="js/main.js"></script>
+	<script src="js/blob.js"></script>
+	<script src="js/camera.js"></script>
+
 </head>
 <body>
 
@@ -42,6 +46,7 @@
 			  <ul>
 				<li><a href="#defaultTab">Test 1</a></li>
 				<li><a href="#cmdTab">cmd</a></li>
+				<li><a id="camTab" href="#newTabs">Camera</a></li>
 				<li><a id="newTab" href="#newTabs">+</a></li>
 			  </ul>
 			  <div id="defaultTab">
@@ -174,13 +179,19 @@
 				</div>
 			  </div>
 			   <div id="cmdTab">
-			   <div class="tabContent">
-			   		<textarea rows="20" cols="50" id="txt">data here:</textarea>
-					<button id="snd" type="button" class="btn btn-block btn-lg btn-primary">send</button>
-					<button id="sndtst" type="button" class="btn btn-block btn-lg btn-primary">test</button>
+				   <div class="tabContent">
+				   		<textarea rows="20" cols="50" id="txt">data here:</textarea>
+				   		<input id="cmd" type="text" name="cmd" class="form-control" >
+						<button id="snd" type="button" class="btn btn-block btn-lg btn-primary">send</button>
+						<button id="sndtst" type="button" class="btn btn-block btn-lg btn-primary">test</button>
+				   </div>
 			   </div>
-			   
-			   
+			   	<div id="camTab">
+				   <div class="tabContent">
+		   				<video id="video"></video>
+						<button id="startbutton">Take photo</button>
+						<canvas id="canvas" style="display: none;"></canvas>
+				   </div>
 			   </div>
 			  <div id="newTabs"></div>
 			</div>
@@ -198,7 +209,8 @@
 
 		
 			<center>
-		<input id="cmd" type="text" name="cmd" class="form-control" >
+
+
 
 
 			<p>  <a href="http://www.oxo.com/">www.oxo.com</a> </p><p> (c) 2011 OXO </p>

@@ -15,6 +15,10 @@
   },
 
   "permissions": [
-    "serial"
+    "serial",
+    "videoCapture",
+    "storage",
+    {"fileSystem": ["write", "retainEntries", "directory"]} 
+
   ]
 }

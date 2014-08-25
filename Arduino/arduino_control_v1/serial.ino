@@ -11,14 +11,14 @@ void Read() {
     // so the main loop can do something about it:
     //if (inputString[sI] == '\n') {
      // inputString[sI] = '\0';
-      Serial.println("tried");
+      sendDebug("tried");
       JsonParser<bufferLength> parser;
       JsonHashTable hashTable = parser.parseHashTable(inputString);
       //char inputString[bufferLength]= "";
       
       if (hashTable.success())
       {
-        Serial.println("success");
+        Serial.println("{\"r\":{\"json\":\"true\"}}");
         /*
         {"tid":0,"sid":0,"tpe":0,"freq":1,"tar":100,"spd":70,"devid":0}   
         {"tid":0,"sid":1,"tpe":0,"freq":1,"tar":50,"spd":70,"devid":0}
@@ -37,7 +37,7 @@ void Read() {
                     steps[numSteps][actuatorTarget]=map(hashTable.getLong("tar"),0,100,actuatorMinThrow,actuatorMaxThrow);
                     steps[numSteps][stepSpeed]=map(hashTable.getLong("spd"),0,100,actuatorMinSpeed,actuatorMaxSpeed);
                     stepStart[numSteps]=0;
-                    Serial.println(steps[numSteps][actuatorTarget]);
+                    sendDebug(String(steps[numSteps][actuatorTarget]));
 
                   break;
                 case stepper:
@@ -60,7 +60,7 @@ void Read() {
         tests[testid][targetCycle]= hashTable.getLong("cnt");
         tests[testid][currentCycle]=0;
         tests[testid][isRunning]=1;
-        Serial.println(tests[testid][targetCycle]);
+        sendDebug(String(tests[testid][targetCycle]));
       }
       else if (hashTable.containsKey("id")){
         Serial.println("{\"id\":1}");
@@ -68,7 +68,8 @@ void Read() {
         
       }
       else{
-       Serial.println("Failed"); 
+       //Serial.println("Failed");
+      Serial.println("{\"r\":{\"json\":false}}"); 
       }
       memset(inputString,'\0',bufferLength);
 
@@ -84,4 +85,9 @@ void Read() {
  
 }
 
+void sendDebug(String st){
+     if (debug){
+       Serial.println(st);   
+     }
+}
 
