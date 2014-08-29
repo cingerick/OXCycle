@@ -1,5 +1,9 @@
   $(function() {
 
+    // chrome.fileSystem.chooseEntry({type: 'openDirectory'}, function(entry){
+    //  writeDirectory =entry;
+    // });
+
     //////////////////////////////////
      var streaming = false,
       video        = document.querySelector('#video'),
@@ -77,6 +81,8 @@ canvas.toBlob(function(blob) {
       takepicture();
       ev.preventDefault();
   }, false);
+
+  tabFresh.tabs("refresh");
 
 });
 

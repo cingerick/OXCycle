@@ -3,8 +3,9 @@ chrome.app.runtime.onLaunched.addListener(function() {
     outerBounds: {
       top: 0,
       left: 0,
-      width: 1000,
-      height: 750
+      width: 1500,
+      height: 1000
     }
+    //state:"fullscreen"
   });
 })

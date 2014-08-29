@@ -18,7 +18,8 @@
     "serial",
     "videoCapture",
     "storage",
-    {"fileSystem": ["write", "retainEntries", "directory"]} 
+    {"fileSystem": ["write", "retainEntries", "directory"]} ,
+    "fullscreen"
 
   ]
 }

@@ -15,6 +15,8 @@ var lastSent="";
 var writeDirectory;
 
 
+
+
 var Arduino = new SerialConnection();
 
 Arduino.onConnect.addListener(function(path) {
@@ -41,6 +43,9 @@ function onOpen(openInfo) {
   //chrome.serial.read(connectionId, 1, onRead);
 };
 
+
+
+////////////////////////////////////    Read Serial Input
 function useInput(st) {
   println('Read: '+st);
   try
@@ -75,6 +80,8 @@ function useInput(st) {
      println('invalid json');
   }
 }
+
+///////////////////////////////////////////
 
 function setStatus(status) {
   document.getElementById('status').innerText = status;
@@ -161,10 +168,21 @@ var str2ab = function(str) {
   return bytes.buffer;
 };
 
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+//                                                                     //
+//                                                                     //
+//                                                                     //  
+//                            Serial Out                               //
+//                                                                     //
+//                                                                     //
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////////////////////////
 
+// runs the queue every second
 setInterval(function(){flushQueue();}, 1000);
+
 function flushQueue(){
     if (serialQueue.length>0 && (recieveSuccess||jsonErrorCount>2 ) ){
         recieveError=false;
@@ -204,6 +222,17 @@ function ArduinoRequest(bla){
   ArduinoSafeWrite("{\""+bla+"\":\"\"}"+'\n');
 }
 
+function sendStart(i){
+  ArduinoSafeWrite ("{\"tid\":"+i+",\"run\":1}"+'\n');
+}
+function sendStop(i){
+  ArduinoSafeWrite ("{\"tid\":"+i+",\"run\":0}"+'\n');
+}
+function stopAll(i){
+  ArduinoSafeWrite ("{\"stop\":1}"+'\n');
+}
+
+
 //////////////////////////////////////////////////////////////////////////// UI
 
 
@@ -236,43 +265,25 @@ function ArduinoRequest(bla){
         return bb.getBlob(mimeString);
     }
 
-    
 
 
 
-
-
-
-
-
-
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+//                                                                     //
+//                                                                     //
+//                                                                     //  
+//                            JQuery UI                                //
+//                                                                     //
+//                                                                     //
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 
   $(function() {
 
-    chrome.fileSystem.chooseEntry({type: 'openDirectory'}, function(entry){
-     writeDirectory =entry;
-    });
 
 
-
-
-  ///////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+///////////   Lists
   
   $( ".leftList .portlet" )
   .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
@@ -281,22 +292,84 @@ function ArduinoRequest(bla){
   .prepend( "<span class='sortIcon ui-icon ui-icon-arrowthick-2-n-s'> <span class='ui-icon ui-icon-plusthick portlet-toggle'></span>");
     
 	
+  $( ".sortable" ).sortable({
+    items: "li:not(.head)",
+      revert: true,
+    handle: ".portlet-header",
+    receive:function(){
+    refreshPortlets();
+    }
+  });
+
+  $( ".leftList li" ).draggable({
+      connectToSortable: ".sortable ",
+    handle: ".portlet-header",
+      helper: "clone",
+      revert: "invalid"
+  });
+  
+  
+  $( "ul, li" ).disableSelection();
+
+
+  $(".trash").droppable({
+    accept: ".sortable li",
+    hoverClass: "ui-state-hover",
+    drop: function(ev, ui) {
+        ui.draggable.remove();
+    }
+  });
+
+  $( document ).on("click",".portlet-toggle",function(){
+      var icon = $( this );
+      icon.toggleClass( "ui-icon-minusthick ui-icon-plusthick" );
+      icon.closest( ".portlet" ).find( ".portlet-content" ).toggle();
+  });
+  
+
+
+
+///////////  Tabs
+
+
+$('#testTabs a').click(function (e) {
+  e.preventDefault();
+  $(this).tab('show');
+});
+
+//$('#myTab  a[href="#defTab"]').tab('show'); // Select tab by name
+$('#testTabs a:first').tab('show'); // Select first tab
+//$('#myTab li:eq(2) a').tab('show'); // Select third tab (0-indexed)
+
+
   $("#defaultTab").addClass("newTabHTML");
 	$("#defaultTab").attr("id","");
 	var tabHTML=$(".newTabHTML").clone();
 	$(".newTabHTML").attr("id","defaultTab");
 	$("#defaultTab").removeClass("newTabHTML");
 	
-  var tabFresh = $( "#tabs" ).tabs();
-	// $(".slider").slider({
-	//   range: "min",
- //      value: 2,
- //      min: .1,
- //      max: 3,
- //      slide: function( event, ui ) {
- //        $( "#amount" ).val( "$" + ui.value );
- //      }
-	//   });
+
+  var tabCount=2;
+  
+
+  
+  $("#newTab").click(function(){
+  var li="<li><a href='#Tab-"+tabCount+"' role='tab' data-toggle='tab'>Test "+tabCount+"</a></li>";
+  $(tabHTML.clone()).insertBefore($("#newTabs"));
+  $(".newTabHTML").attr("id","Tab-"+tabCount);
+  $(".newTabHTML").removeClass("newTabHTML");
+  $('#testTabs a').click(function (e) {
+    e.preventDefault();
+    $(this).tab('show');
+    });
+
+  tabCount++;
+  refreshPortlets();
+  
+  });
+
+
+//////// Buttons
 	
 	$( "input[type=submit], button, .button" )
       .button()
@@ -304,78 +377,30 @@ function ArduinoRequest(bla){
         event.preventDefault();
       });
 	
-	$( ".sortable" ).sortable({
-	  items: "li:not(.head)",
-      revert: true,
-	  handle: ".portlet-header",
-	  receive:function(){
-	  refreshPortlets();
-	  }
-    });
-    $( ".leftList li" ).draggable({
-      connectToSortable: ".sortable ",
-	  handle: ".portlet-header",
-      helper: "clone",
-      revert: "invalid"
-    });
-	
-	
-    $( "ul, li" ).disableSelection();
-
 
 
     $(".sendTest").click(function(e){
-
-    var dat=$(this).closest(".actionList").find("form").each(function(){
-        var dat=$(this).serializeArray();
-        var myjson = {}; 
-        $.each(dat, function() { myjson[this.name] = this.value; }); 
-        serialQueue.push(myjson);
-        //println(myjson);
+      var dat=$(this).closest(".actionList").find("form").each(function(){
+          var dat=$(this).serializeArray();
+          var myjson = {}; 
+          $.each(dat, function() { myjson[this.name] = this.value; }); 
+          serialQueue.push(myjson);
+          //println(myjson);
+      });
     });
-      
- 
 
-
+    $(".stopButton").click(function(e){
+      stopAll();
     });
+
+
 	
 
-		
-		
-	$( document ).on("click",".portlet-toggle",function(){
-      var icon = $( this );
-      icon.toggleClass( "ui-icon-minusthick ui-icon-plusthick" );
-      icon.closest( ".portlet" ).find( ".portlet-content" ).toggle();
+  /////////   Progress Bar
+    $( ".testProgress" ).progressbar({
+      value: 37
     });
-  
-	var tabCount=2;
-	
 
-	
-	$("#newTab").click(function(){
-	var li="<li><a id='tabtop"+tabCount+"' href='#Tab-"+tabCount+"' role='presentation'>Test "+tabCount+"</a></li>";
-	$(li).insertBefore($("#newTab").parent());
-	//tabFresh.find( ".ui-tabs-nav" ).append( li );
-	tabFresh.append($(tabHTML.clone()));
-	$(".newTabHTML").attr("id","#Tab-"+tabCount);
-	$(".newTabHTML").attr("role","tabpanel");
-	$(".newTabHTML").addClass("ui-tabs-panel ui-widget-content ui-corner-bottom");
-	$(".newTabHTML").removeClass("newTabHTML");
-	
-	// $( "#tabs" ).tabs();
-	tabFresh.tabs("refresh");
-	//$("#tabs").tabs('load', tabCount-2);
-	tabCount++;
-	refreshPortlets();
-	
-	});
-	$(".trash").droppable({
-    accept: ".sortable li",
-    hoverClass: "ui-state-hover",
-    drop: function(ev, ui) {
-        ui.draggable.remove();
-    }
-	});
 	
 	
   });
@@ -442,3 +467,5 @@ function ArduinoRequest(bla){
 	});
   }
   
+
+
