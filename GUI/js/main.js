@@ -1,32 +1,29 @@
 
-var ArduinoReady=false;
-var ArduinoCommandReady=false;
-var serialConnected=false;
-var serialNumber="";
-var serialFlashed=false;
-var ArduinoHomed=false;
-var serialQueue=[];
+var ArduinoReady        =false;
+var ArduinoCommandReady =false;
+var serialConnected     =false;
+var serialNumber        ="";
+var serialFlashed       =false;
+var ArduinoHomed        =false;
+var serialQueue         =[];
 var portSearch;
 var eligiblePorts;
-var recieveError=false;
-var recieveSuccess=false;
-var jsonErrorCount=0;
-var lastSent="";
+var recieveError        =false;
+var recieveSuccess      =false;
+var jsonErrorCount      =0;
+var lastSent            ="";
 var writeDirectory;
 
-
-
-
-var Arduino = new SerialConnection();
-
-Arduino.onConnect.addListener(function(path) {
+  var Arduino = new SerialConnection();
+  
+  Arduino.onConnect.addListener(function(path) {
   //console.log('connected to: ' + this.DEVICE_PATH);
   //Arduino.send("hello arduino");
-});
-
-Arduino.onReadLine.addListener(function(line) {
+  });
+  
+  Arduino.onReadLine.addListener(function(line) {
   //console.log('read line: ' + line);
-});
+  });
 
 
 function onOpen(openInfo) {
@@ -264,6 +261,112 @@ function stopAll(i){
         bb.append(ab);
         return bb.getBlob(mimeString);
     }
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+//                                                                     //
+//                                                                     //
+//                                                                     //  
+//                            Sensor portlets                          //
+//                                                                     //
+//                                                                     //
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+
+function addPortlet(destinationList,type,settings){
+    settings = settings || {devid:1, speed:50, frequency:1};
+    var output="";
+    var title="";
+    var devName='';
+
+    switch(type){
+      case 1:
+        title="Actuator";
+        devName= "Actuator";
+        break;
+      default:
+      break;
+    };
+
+var portletStart=
+            '<li  class="">'+
+              '<div class="portlet">'+
+               ' <div class="portlet-header">'+title+'</div>'+
+                '<div class="portlet-content" style="display:none"> ' +
+                '<ul>'+
+                  '<form>';
+
+
+
+var frequency=    '<li>'+
+                    '<div>frequency:every </div>' +
+                    '<div><input name="freq" class="spinner" value=1></div>'+
+                    '<div>nth cycle</div>'+
+                  '</li>';
+var devID=        '<li><label>'+devName+' #</label>'+
+                    '<select name="devid">'+
+                      '<option value="1">1</option>'+
+                      '<option value="2">2</option>'+
+                      '<option value="3">3</option>'+
+                    '</select>'+
+                  '</li>';
+var actThrow=     '<li>'+
+                    '<div>Throw</div>'+
+                    '<div class="slider actuatorSlider" name="tar"></div>'+
+                    '<div class="testBtn button">test</div>'+
+                  '</li>';
+
+
+var currentBtn=   '<li>'+
+                    '<div class="button actuatorBtn">use current</div>'+
+                  '</li>';
+
+var speedSlider=  '<li>'+
+                    '<div>Speed</div>'+
+                    '<div class="slider actuatorSlider" name="spd"></div>'+
+                  '</li>';
+
+var portletEnd=     '<input type="hidden" name="spd" value=0>'+
+                    '<input type="hidden" name="tar" value=0>'+
+                    '<input type="hidden" name="tid" value=0>'+
+                    '<input type="hidden" name="sid" value=0>'+
+                    '<input type="hidden" name="tpe" value=0>'+
+                 '</form>'+
+                '</ul>'+
+                '</div>'+
+              '</div>'+
+            '</li>';
+
+
+    switch(type){
+      case 1:
+      output= portletStart+
+              frequency+
+              devID
+              actThrow+
+              currentBtn+
+              speedSlider+
+              portletEnd;
+
+        break;
+      default:
+      break;
+
+
+    };
+
+
+$(destinationList).append(output);
+
+
+
+
+
+}
+
+
+
 
 
 

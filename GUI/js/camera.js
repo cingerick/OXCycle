@@ -82,7 +82,7 @@ canvas.toBlob(function(blob) {
       ev.preventDefault();
   }, false);
 
-  tabFresh.tabs("refresh");
+  //tabFresh.tabs("refresh");
 
 });
 
