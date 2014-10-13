@@ -17,6 +17,7 @@
   "permissions": [
     "serial",
     "videoCapture",
+    "unlimitedStorage",
     "storage",
     {"fileSystem": ["write", "retainEntries", "directory"]} ,
     "fullscreen"

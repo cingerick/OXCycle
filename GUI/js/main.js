@@ -116,7 +116,22 @@ function testSerial(ports){
   }
 }
 
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+//                                                                     //
+//                                                                     //
+//                                                                     //  
+//                            on page Load                             //
+//                                                                     //
+//                                                                     //
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+
 onload = function() {
+
+
   chrome.serial.getDevices(function(ports) {
    try{
    testSerial(ports);
@@ -275,17 +290,46 @@ function stopAll(i){
 
 
 function addPortlet(destinationList,type,settings){
-    settings = settings || {devid:1, speed:50, frequency:1};
-    var output="";
-    var title="";
-    var devName='';
+  var isDefault=true;
+  if (settings){
 
-    switch(type){
+    isDefault=false
+  }
+    settings = settings || {type:type,
+                            testID: 1, 
+                            order:1, 
+                            devID:1, 
+                            speed:50, 
+                            freq:1, 
+                            actTarget:50,
+                            stepTarget:90,
+                            errCheck:1,
+                            errType:1,
+                            errCnt:1};
+    var output="1";
+    var title="1";
+    var devName='1';
+
+    switch(parseInt(settings.type)){
       case 1:
         title="Actuator";
         devName= "Actuator";
         break;
+      case 2:
+        title="Step";
+        devName= "Actuator";
+        break;
+      case 3:
+        title="Force";
+        devName= "Actuator";
+        break;
+      case 4:
+        title="Force";
+        devName= "Actuator";
+        break;
       default:
+        title="Default";
+        devName= "Actuator";
       break;
     };
 
@@ -294,18 +338,17 @@ var portletStart=
               '<div class="portlet">'+
                ' <div class="portlet-header">'+title+'</div>'+
                 '<div class="portlet-content" style="display:none"> ' +
-                '<ul>'+
-                  '<form>';
+                '<ul>';
 
 
 
 var frequency=    '<li>'+
                     '<div>frequency:every </div>' +
-                    '<div><input name="freq" class="spinner" value=1></div>'+
+                    '<div><input name="freq" class="spinner freqInput" value=1></div>'+
                     '<div>nth cycle</div>'+
                   '</li>';
 var devID=        '<li><label>'+devName+' #</label>'+
-                    '<select name="devid">'+
+                    '<select name="devid" class="devIDInput">'+
                       '<option value="1">1</option>'+
                       '<option value="2">2</option>'+
                       '<option value="3">3</option>'+
@@ -313,7 +356,7 @@ var devID=        '<li><label>'+devName+' #</label>'+
                   '</li>';
 var actThrow=     '<li>'+
                     '<div>Throw</div>'+
-                    '<div class="slider actuatorSlider" name="tar"></div>'+
+                    '<div class="slider actuatorSlider" name="actTarg"></div>'+
                     '<div class="testBtn button">test</div>'+
                   '</li>';
 
@@ -324,52 +367,207 @@ var currentBtn=   '<li>'+
 
 var speedSlider=  '<li>'+
                     '<div>Speed</div>'+
-                    '<div class="slider actuatorSlider" name="spd"></div>'+
+                    '<div class="slider actuatorSlider" name="speed"></div>'+
                   '</li>';
 
-var portletEnd=     '<input type="hidden" name="spd" value=0>'+
-                    '<input type="hidden" name="tar" value=0>'+
-                    '<input type="hidden" name="tid" value=0>'+
-                    '<input type="hidden" name="sid" value=0>'+
-                    '<input type="hidden" name="tpe" value=0>'+
+var portletEnd=   '<form class="actionSettings">'+
+                    '<input type="hidden" name="testID"    value='+settings.testID+'>'+
+                    '<input type="hidden" name="order"     value='+settings.order+'>'+
+                    '<input type="hidden" name="type"      value='+settings.type+'>'+
+                    '<input type="hidden" class="speedVal"    name="speed"     value='+settings.speed+'>'+
+                    '<input type="hidden" class="devIDVal"    name="devID"     value='+settings.devID+'>'+
+                    '<input type="hidden" class="freqVal"     name="freq"      value='+settings.freq+'>'+
+                    '<input type="hidden" class="actTargVal"  name="actTarg"   value='+settings.actTarget+'>'+
+                    '<input type="hidden" class="stepTargVal" name="stepTarg"  value='+settings.stepTarget+'>'+
+                    '<input type="hidden" class="errCheckVal" name="errCheck"  value='+settings.errCheck+'>'+
+                    '<input type="hidden" class="errTypeVal"  name="errType"   value='+settings.errType+'>'+
+                    '<input type="hidden" class="errCntVal"   name="errCnt"    value='+settings.errCnt+'>'+
                  '</form>'+
                 '</ul>'+
                 '</div>'+
               '</div>'+
             '</li>';
 
-
-    switch(type){
+    switch(parseInt(settings.type)){
       case 1:
       output= portletStart+
               frequency+
-              devID
+              devID+
               actThrow+
               currentBtn+
               speedSlider+
               portletEnd;
-
         break;
       default:
+      output= portletStart+
+              frequency+
+              devID+
+              actThrow+
+              currentBtn+
+              speedSlider+
+              portletEnd;
       break;
-
-
     };
+  //$(destinationList).find(ul).append(output);
+
+  if (isDefault){
+   $('#'+destinationList).find('.leftList').append(output);
+  }
+  else{
+    $('#'+destinationList).find('.actionList').append(output);
+  }
+ 
+};
+
+function addTab(testID, settings){
+      settings = settings || {testID: 1, 
+                            email:1, 
+                            cycleCnt:9865, 
+                            name:"newTest",
+
+                          };
 
 
-$(destinationList).append(output);
+
+
+//var tabPane='<div class="tab-pane" id="'+testID+'">testID</div>'
+
+var settingsPanel=
+        '<div class="panel panel-default">'+
+
+            '<div class="panel-heading">'+
+               '<h3 class="panel-title">Info</h3>'+
+            '</div>'+
+          '<form class="testSettings">'+
+
+            '<div class="panel-body">'+
+            '<div class="testStatus">'+
+             ' <div class="row">'+
+                '<div class="col-md-4">'+
+                '<div class="form-group">'+
+                  '<label for="testName" class="col-sm-5 control-label">Test Name</label>'+
+                  '<div class="col-sm-7">'+
+                  '<input type="hidden" name="testID" value="1">'+
+                    '<input type="text" name="name" class="form-control"  value="Test 1">'+
+                  '</div>'+
+                '</div>'+
+               '</div>'+
+                  '<div class="col-md-4">'+
+                '<div class="form-group">'+
+                  '<label for="testName" class="col-sm-2 control-label">Email</label>'+
+                  '<div class="col-sm-10">'+
+                      
+                      '<input type="email" name="email" class="form-control user_email" Value="jdoe@OXO.com">'+
+              
+                 '</div>'+
+                '</div>'+
+               '</div>'+
+                 '<div class="col-md-4">'+
+                '<div class="checkbox">'+
+                  '<label><input type="checkbox" name="emailFlag" value="false">Email me when complete</label>'+
+                '</div>'+
+              '</div>'+
+
+              '<div class="row">'+
+                '<div class="col-md-5">'+
+                  '<div class="form-group">'+
+                    '<label for="testName" class="col-sm-5 control-label">Number of cycles</label>'+
+                  '<div class="col-sm-5">'+
+                    '<input type="number" name="numCycles" class="form-control"  value="1000">'+
+                  '</div>'+
+                '</div>'+
+               '</div>'+
+                  '<div class="col-md-4">'+
+                '<div class="form-group">'+
+                  '<label for="testName" class="col-sm-6 control-label">Allowed Errors</label>'+
+                  '<div class="col-sm-4">'+
+                    '<input type="number" name="numErr"class="form-control" value="5">'+
+                  '</div>'+
+                '</div>'+
+               '</div>'+
+            '</div>'+
+
+
+            '</div>'+
+          '</div>'+
+          '</div>'+
+          '</form>'+
+        '</div>';
 
 
 
 
+ var actionsPanel=       
+        '<div class="panel panel-default">'+
+          '<div class="panel-heading">'+
+            '<h3 class="panel-title">Test Settings</h3>'+
+          '</div>'+
+          '<div class="panel-body">'+
+            '<div class="row">'+
+              '<div class="col-md-3">'+
+                '<ul class="leftList">'+
+                '</ul>'+
+          '</div>'+
+        '<div class="col-md-8">'+
+          '<ul class="actionList sortable connectedSortable">'+
+            '<li class="ui-state-default head">Drag actions here</li>'+
+          '</ul>'+
+        '</div>'+
+        '</div>'+
+          
+         '<div class=" trash ui-state-error head">Trash</div>'+
+        '</div>'+
+        '</div>';
+
+var buttonsPanel=
+        '<div class="panel panel-default">'+
+          '<div class="panel-body">'+
+            '<div class="testStatus">'+
+              '<div class="btn-group">'+
+                '<button type="button" class="btn btn-success sendTest">Start</button>'+
+                '<button type="button" class="btn btn-danger">Stop</button>'+
+                '<button type="button" class="btn ">Pause</button>'+
+                '<button type="button" class="btn ">Resume</button>'+
+                '<button type="button" class="btn saveBtn">Save</button>'+
+              '</div>'+
+            '</div>'+
+          '</div>'+
+        '</div>';
+
+
+
+var tabPane= 
+    '<div class="tab-pane" id="'+testID+'">'+
+      settingsPanel+
+      actionsPanel+
+      buttonsPanel+
+    '</div>';
+  $('#testTabs').find('li:last').after('<li><a href="#'+testID+'" role="tab" data-toggle="tab">'+settings.name+'</a></li>');
+  //$('#testTabs').append('<li><a href="#'+testID+' " role="tab" data-toggle="tab">'+settings.name+'</a></li>');
+  $("#tabContent").append(tabPane);
+
+
+//
+  addPortlet(testID,1);
+  addPortlet(testID,2);
+  addPortlet(testID,3);
+//if test exists, add more
+
+
+  refreshPortlets();
+  newPortlets(testID);
+
+  $('#testTabs a').click(function (e) {
+  e.preventDefault();
+  $(this).tab('show');
+});
+
+$('#testTabs li:last a').tab('show');
+  //$('#testTabs li a[href="#'+testID+'"]').click();
+
+  //$('a[href="#'+testID+'"]').parent().trigger('click');
 
 }
-
-
-
-
-
-
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -382,11 +580,12 @@ $(destinationList).append(output);
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
-  $(function() {
 
-
-
+$(function() {
 ///////////   Lists
+  //addPortlet("leftlist",1);
+  //addPortlet("leftlist",2);
+  //addPortlet("leftlist",3);
   
   $( ".leftList .portlet" )
   .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
@@ -411,7 +610,6 @@ $(destinationList).append(output);
       revert: "invalid"
   });
   
-  
   $( "ul, li" ).disableSelection();
 
 
@@ -430,8 +628,6 @@ $(destinationList).append(output);
   });
   
 
-
-
 ///////////  Tabs
 
 
@@ -443,7 +639,6 @@ $('#testTabs a').click(function (e) {
 //$('#myTab  a[href="#defTab"]').tab('show'); // Select tab by name
 $('#testTabs a:first').tab('show'); // Select first tab
 //$('#myTab li:eq(2) a').tab('show'); // Select third tab (0-indexed)
-
 
   $("#defaultTab").addClass("newTabHTML");
 	$("#defaultTab").attr("id","");
@@ -457,15 +652,15 @@ $('#testTabs a:first').tab('show'); // Select first tab
 
   
   $("#newTab").click(function(){
-  var li="<li><a href='#Tab-"+tabCount+"' role='tab' data-toggle='tab'>Test "+tabCount+"</a></li>";
-  $(tabHTML.clone()).insertBefore($("#newTabs"));
-  $(".newTabHTML").attr("id","Tab-"+tabCount);
-  $(".newTabHTML").removeClass("newTabHTML");
-  $('#testTabs a').click(function (e) {
-    e.preventDefault();
-    $(this).tab('show');
-    });
-
+  // var li="<li><a href='#Tab-"+tabCount+"' role='tab' data-toggle='tab'>Test "+tabCount+"</a></li>";
+  // $(tabHTML.clone()).insertBefore($("#newTabs"));
+  // $(".newTabHTML").attr("id","Tab-"+tabCount);
+  // $(".newTabHTML").removeClass("newTabHTML");
+  // $('#testTabs a').click(function (e) {
+  //   e.preventDefault();
+  //   $(this).tab('show');
+  //   });
+addTab(new Date().getTime());
   tabCount++;
   refreshPortlets();
   
@@ -496,6 +691,36 @@ $('#testTabs a:first').tab('show'); // Select first tab
       stopAll();
     });
 
+    $(document).on("click",".saveBtn",function(e){
+      var id=$(this).closest('.tab-pane').attr('id');
+      $( "input[name='testID']" ).val( id );
+      saveTest(id);
+      
+    });
+
+    $(document).on("click",".clearTests",function(e){
+        indexedDB.deleteDatabase('tests');
+        listTests();
+      
+    });
+
+    
+    $(document).on("click",".loadTestBtn",function(e){
+        var id =$(this).attr('testid');
+        println("load clicked");
+        println(id);
+        if ($("#"+id).length<=0){
+          addTab(id);
+          listActions(id);   
+        }
+        else{
+          $('#testTabs li a[href="#'+id+'"]').click();
+        }
+
+    });
+
+
+
 
 	
 
@@ -507,32 +732,67 @@ $('#testTabs a:first').tab('show'); // Select first tab
 	
 	
   });
+
+function newPortlets(testID){
+  $("#"+testID).
+  find(".leftList .portlet" )
+  .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
+  .find( ".portlet-header" )
+  .remove("span")
+  .addClass( "ui-widget-header ui-corner-all" )
+  .prepend( "<span class='sortIcon ui-icon ui-icon-arrowthick-2-n-s'> <span class='ui-icon ui-icon-plusthick portlet-toggle'></span>");
+}
+
+function newActionPortlets(testID){
+  $("#"+testID).
+  find(".actionList .portlet" )
+  .addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
+  .find( ".portlet-header" )
+  .remove("span")
+  .addClass( "ui-widget-header ui-corner-all" )
+  .prepend( "<span class='sortIcon ui-icon ui-icon-arrowthick-2-n-s'> <span class='ui-icon ui-icon-plusthick portlet-toggle'></span>");
+}
+
+function refreshPortlets(){
+
   
 
-  function refreshPortlets(){
 
-	
-	$( ".spinner" ).spinner({
-	  min: 1,
-      step: 1,
-      start: 1
-	});
-	
-	
-	//$(".slider").slider();
-
+  	$( ".spinner" ).spinner({
+  	    min: 1,
+        step: 1,
+        start: 1
+  	});
   $( ".slider" ).slider({
         range: "min",
         min: 0,
         max: 100,
         slide: function( event, ui ) {
-          $(ui.handle).parent().closest("form").find('input[name="'+$(ui.handle).parent().attr('name')+'"]').val(ui.value );
+          $(ui.handle).parent().closest(".portlet-content").find('input[name="'+$(ui.handle).parent().attr('name')+'"]').val(ui.value );
         }
   });
 
+$(document).on("change", ".freqInput",function(e){
+  println("freq change"+$(this).val());
+  $(this).closest(".portlet-content").find(".freqVal").val($(this).val());
+});
+
+$(document).on("change", ".devIDInput",function(e){
+  println("freq change"+$(this).val());
+  $(this).closest(".portlet-content").find(".devIDVal").val($(this).val());
+});
+
+$(document).on("change", ".devIDInput",function(e){
+  println("freq change"+$(this).val());
+  $(this).closest(".portlet-content").find(".devIDVal").val($(this).val());
+});
 
 
-   	$( "input[type=submit], button, .button" ).button();
+
+
+
+
+  $( "input[type=submit], button, .button" ).button();
 	
 	$( ".sortable" ).sortable({
 	  connectWith:".trash",
@@ -569,6 +829,7 @@ $('#testTabs a:first').tab('show'); // Select first tab
     }
 	});
   }
+
   
 
 

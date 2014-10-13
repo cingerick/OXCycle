@@ -104,7 +104,10 @@ height:50px;
     margin: 0 1em 1em 0;
     height: 50px;
   }
-  
+  #newTab{
+    float: right;
+    width:100px;
+  }
     select {
       min-width: 60px;
     }
